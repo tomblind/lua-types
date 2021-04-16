@@ -17,7 +17,7 @@ describeForEachLuaTarget('global', (target) => {
             target,
             `
             const v = assert({ bla: "not false"});
-            const bla = v.bla;
+            assertType<string>(v.bla);
         `
         );
 
