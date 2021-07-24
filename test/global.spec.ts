@@ -17,7 +17,7 @@ describeForEachLuaTarget('global', (target) => {
             target,
             `
             const v = assert({ bla: "not false"});
-            const bla = v.bla;
+            assertType<string>(v.bla);
         `
         );
 
@@ -29,9 +29,9 @@ describeForEachLuaTarget('global', (target) => {
             target,
             `
             const [v, a, b] = assert({ bla: "not false"}, { foo: "FOO" }, { bar: "BAR" });
-            const bla = v.bla;
-            const foo = a.foo;
-            const bar = b.bar;
+            assertType<string>(v.bla);
+            assertType<string>(a.foo);
+            assertType<string>(b.bar);
         `
         );
 
@@ -55,6 +55,20 @@ describeForEachLuaTarget('global', (target) => {
             `
             const metatable = getmetatable({});
             const add = metatable!.__add;
+            assertType<Function | undefined>(add);
+        `
+        );
+
+        expect(lua).toMatchSnapshot();
+    });
+
+    test('getmetatable on string', () => {
+        const lua = tstl(
+            target,
+            `
+            const metatable = getmetatable("foo");
+            const index = metatable!.__index;
+            assertType<Function | object | undefined>(index);
         `
         );
 
@@ -78,7 +92,8 @@ describeForEachLuaTarget('global', (target) => {
             target,
             `
             for (const [i, v] of ipairs([1, 2, 3])) {
-                print(i, v);
+                assertType<number>(i);
+                assertType<number>(v);
             }
         `
         );
@@ -90,7 +105,9 @@ describeForEachLuaTarget('global', (target) => {
         const lua = tstl(
             target,
             `
-            const [nextKey, nextValue] = next({});
+            const [nextKey, nextValue] = next({x: "foo"});
+            assertType<"x">(nextKey);
+            assertType<string>(nextValue);
         `
         );
 
@@ -102,6 +119,8 @@ describeForEachLuaTarget('global', (target) => {
             target,
             `
             const [nextKey, nextValue] = next({ a: "b", c: "d" }, "a");
+            assertType<"a" | "c">(nextKey);
+            assertType<string>(nextValue);
         `
         );
 
@@ -113,7 +132,25 @@ describeForEachLuaTarget('global', (target) => {
             target,
             `
             for (const [k, v] of pairs({ foo: "bar", baz: "bur" })) {
-                print(k, v);
+                assertType<"foo" | "baz">(k);
+                assertType<string>(v);
+            }
+        `
+        );
+
+        expect(lua).toMatchSnapshot();
+    });
+
+    test('pairs with LuaTable', () => {
+        const lua = tstl(
+            target,
+            `
+            const tbl = new LuaTable<string, string>();
+            tbl.set("foo", "bar");
+            tbl.set("baz", "bur");
+            for (const [k, v] of pairs(tbl)) {
+                assertType<string>(k);
+                assertType<string>(v);
             }
         `
         );
@@ -143,7 +180,8 @@ describeForEachLuaTarget('global', (target) => {
         const lua = tstl(
             target,
             `
-            const [success, resultOrMessage] = pcall((a: number) => true, 3);
+            const result = pcall((a: number) => true, 3);
+            assertType<[false, string] | [true, boolean]>(result);
         `
         );
 
@@ -154,7 +192,8 @@ describeForEachLuaTarget('global', (target) => {
         const lua = tstl(
             target,
             `
-            const [success, resultOrMessage] = pcall((a: number) => true, {}, 3);
+            const result = pcall((a: number) => true, {}, 3);
+            assertType<[false, string] | [true, boolean]>(result);
         `
         );
 
@@ -177,6 +216,7 @@ describeForEachLuaTarget('global', (target) => {
             target,
             `
             const values = select(2, "a", "b", "c");
+            assertType<string[]>(values);
         `
         );
 
@@ -188,6 +228,8 @@ describeForEachLuaTarget('global', (target) => {
             target,
             `
             const [b, c] = select(2, "a", "b", "c");
+            assertType<string>(b);
+            assertType<string>(c);
         `
         );
 
@@ -199,6 +241,7 @@ describeForEachLuaTarget('global', (target) => {
             target,
             `
             const count = select("#", "a", "b", "c");
+            assertType<number>(count);
         `
         );
 
@@ -210,8 +253,7 @@ describeForEachLuaTarget('global', (target) => {
             target,
             `
             const tbl = setmetatable({}, {__index: {foo: "bar"}});
-            const takesStr = (s: string) => {};
-            takesStr(tbl.foo);
+            assertType<string>(tbl.foo);
             `
         );
 
@@ -223,8 +265,7 @@ describeForEachLuaTarget('global', (target) => {
             target,
             `
             const tbl = setmetatable({}, {__index: (key: string) => key + "bar"});
-            const takesStr = (s: string) => {};
-            takesStr(tbl.foo);
+            assertType<string>(tbl.foo);
             `
         );
 
@@ -236,6 +277,7 @@ describeForEachLuaTarget('global', (target) => {
             target,
             `
             const tbl = setmetatable({});
+            assertType<object>(tbl);
             `
         );
 
@@ -247,6 +289,7 @@ describeForEachLuaTarget('global', (target) => {
             target,
             `
             const number = tonumber("213.4");
+            assertType<number>(number);
         `
         );
 
@@ -258,6 +301,7 @@ describeForEachLuaTarget('global', (target) => {
             target,
             `
             const number = tonumber("213.4", 5);
+            assertType<number>(number);
         `
         );
 
@@ -269,6 +313,7 @@ describeForEachLuaTarget('global', (target) => {
             target,
             `
             const str = tostring(213.4);
+            assertType<string>(str);
         `
         );
 
@@ -280,6 +325,7 @@ describeForEachLuaTarget('global', (target) => {
             target,
             `
             const t = type(213.4);
+            assertType<'nil' | 'number' | 'string' | 'boolean' | 'table' | 'function' | 'thread' | 'userdata'>(t);
         `
         );
 
