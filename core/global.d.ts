@@ -124,7 +124,9 @@ declare function getmetatable<T>(object: T): LuaMetatable<T> | undefined;
  * will iterate over the key–value pairs (1,t[1]), (2,t[2]), ..., up to the
  * first nil value.
  */
-declare function ipairs<T>(t: Record<number, T>): LuaIterable<LuaMultiReturn<[number, T]>>;
+declare function ipairs<T>(
+    t: Record<number, T>
+): LuaIterable<LuaMultiReturn<[number, NonNullable<T>]>>;
 
 /**
  * Allows a program to traverse all fields of a table. Its first argument is a
@@ -159,8 +161,8 @@ declare function next<T extends object>(table: T, index?: keyof T): LuaMultiRetu
  */
 declare function pairs<TKey, TValue>(
     t: LuaTable<TKey, TValue>
-): LuaIterable<LuaMultiReturn<[TKey, TValue]>>;
-declare function pairs<T>(t: T): LuaIterable<LuaMultiReturn<[keyof T, T[keyof T]]>>;
+): LuaIterable<LuaMultiReturn<[TKey, NonNullable<TValue>]>>;
+declare function pairs<T>(t: T): LuaIterable<LuaMultiReturn<[keyof T, NonNullable<T[keyof T]>]>>;
 
 /**
  * Calls function f with the given arguments in protected mode. This means that
