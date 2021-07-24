@@ -143,7 +143,7 @@ declare function ipairs<T>(t: Record<number, T>): LuaIterable<LuaMultiReturn<[nu
  * value to a non-existent field in the table. You may however modify existing
  * fields. In particular, you may clear existing fields.
  */
-declare function next(table: object, index?: any): LuaMultiReturn<[any, any] | []>;
+declare function next<T extends object>(table: T, index?: keyof T): LuaMultiReturn<[keyof T, T[keyof T]] | []>;
 
 /**
  * If t has a metamethod __pairs, calls it with t as argument and returns the
@@ -200,7 +200,7 @@ declare function rawequal<T>(v1: T, v2: T): boolean;
  * Gets the real value of table[index], without invoking the __index metamethod.
  * table must be a table; index may be any value.
  */
-declare function rawget<T extends object, K extends keyof T>(table: T, index: K): T[K];
+declare function rawget<T extends object, K extends keyof T>(table: T, index: K): unknown;
 
 /**
  * Returns the length of the object v, which must be a table or a string,
@@ -215,7 +215,7 @@ declare function rawlen(v: object | string): number;
  *
  * This function returns table.
  */
-declare function rawset<T extends object, K extends keyof T>(table: T, index: K, value: T[K]): T;
+declare function rawset<T extends object, K extends keyof T>(table: T, index: K, value: unknown): T;
 
 /**
  * If index is a number, returns all arguments after argument number index; a
